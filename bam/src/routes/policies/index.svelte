@@ -4,34 +4,17 @@
     import { getAuth, onAuthStateChanged } from "firebase/auth";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
-    import { getDatabase, ref, onValue, get, child } from "firebase/database";
+    import { getDatabase, ref, get, child } from "firebase/database";
     import { format } from "date-fns";
 
     let hide = false;
 
     const auth = getAuth();
 
-    let policies = [];
-    let policiesCount;
+    export let policies = [];
+    export let policiesCount;
 
     const dbRef = ref(getDatabase());
-
-    get(child(dbRef, "data/"))
-        .then((snapshot) => {
-            if (snapshot.exists()) {
-                let data = snapshot.val();
-
-                console.log({ data });
-                [policiesCount, policies] = Object.values(data);
-
-                console.log(policies);
-            } else {
-                console.log("No data available");
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-        });
 
     onMount(() => {
         onAuthStateChanged(auth, (user) => {
@@ -39,6 +22,24 @@
                 goto("/login");
             }
         });
+
+        get(child(dbRef, "data/"))
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    let data = snapshot.val();
+
+                    console.log({ data });
+                    [, policies] = Object.values(data);
+                   policiesCount = policies.length;
+
+                    console.log(policies);
+                } else {
+                    console.log("No data available");
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+            });
     });
 
     const hidePolicies = () => (hide = !hide);
@@ -53,11 +54,10 @@
         return date ? format(convertDate(date), dateFormat) : "";
     };
 
-    const onPolicyRowclick = () => {
-        goto;
+    const handlePolicyClick = (policynumber) => {
+        goto(`/policies/${policynumber}`);
     };
 </script>
-
 
 <div class="existing-policies-info">
     <div class="spacer" />
@@ -97,7 +97,12 @@
                 </thead>
                 <tbody>
                     {#each policies as policy}
-                        <tr class="policy-row">
+                        <tr
+                            class="policy-row"
+                            on:click|preventDefault={handlePolicyClick(
+                                policy.policynumber
+                            )}
+                        >
                             <td>{policy.name}</td>
                             <td>{policy.primaryinsuredname}</td>
                             <td>{policy.policynumber}</td>

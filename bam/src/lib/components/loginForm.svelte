@@ -7,34 +7,39 @@
     } from "firebase/auth";
     export let title;
     const auth = getAuth();
+    const user = auth.currentUser;
     function login() {
         let email = document.getElementById("emailInput").value;
         let password = document.getElementById("passInput").value;
-        if (title == "Login") {
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    // Signed in
-                    const user = userCredential.user;
-                    localStorage.setItem("uid", user.uid);
-                    localStorage.setItem("isLoggedIn", true);
-                    goto("/policies");
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                    alert('The information entered does not match what we have, or the user does not exist')
-                });
-        } else {
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    console.log(user);
-                    goto("/policies");
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    const errorMessage = error.message;
-                });
+        if (!user) {
+            if (title == "Login") {
+                signInWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        // Signed in
+                        const user = userCredential.user;
+                        localStorage.setItem("uid", user.uid);
+                        localStorage.setItem("isLoggedIn", true);
+                        goto("/policies");
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                        alert(
+                            "The information entered does not match what we have, or the user does not exist"
+                        );
+                    });
+            } else {
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        console.log(user);
+                        goto("/policies");
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        const errorMessage = error.message;
+                    });
+            }
         }
     }
 </script>
